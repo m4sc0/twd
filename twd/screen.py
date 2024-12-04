@@ -1,6 +1,7 @@
 import curses
 import time
 import os
+import re
 from . import crud
 import logging
 
@@ -79,6 +80,19 @@ def display_select_screen(stdscr):
         stdscr.addstr(3, 1, header_text[:inner_width])
 
         draw_hr(stdscr, 4)
+
+        # sort entries
+        order_by_prefix, order_by = re.match(
+            r"([+-])(alias|path|created_at)", CONFIG["order_by"]
+        ).groups()
+        reverse_order = order_by_prefix == "-"
+        filtered_DIRS = dict(
+            sorted(
+                filtered_DIRS.items(),
+                key=lambda item: item[1][order_by],
+                reverse=reverse_order,
+            )
+        )
 
         # List entries
         line_start = 5

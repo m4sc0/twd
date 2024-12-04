@@ -19,6 +19,8 @@ DEFAULT_CONFIG = {
     "data_file": os.path.expanduser("~/.twd/data"),
     "output_behaviour": 2,
     "clear_after_screen": False,
+    # possible values: +alias, -alias, +path, -path, +created_at, -created_at
+    "order_by": "+alias",
     "log_file": os.path.expanduser("~/.twd/log"),
     "error_file": os.path.expanduser("~/.twd/error"),
     "log_format": "%(asctime)s - %(levelname)s - %(message)s",
