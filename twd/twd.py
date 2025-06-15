@@ -4,10 +4,100 @@ import json
 import time
 import re
 import logging
+import tempfile
 from importlib.metadata import version, PackageNotFoundError
-from .logger import initialize_logging
-from .screen import display_select
-from . import crud
+from collections import OrderedDict
+
+
+# Flexible imports - try multiple approaches
+try:
+    # Try relative imports first (when run as part of package)
+    from .logger import initialize_logging
+    from .screen import display_select # <--- This is the actual TUI function
+    from . import crud
+except ImportError:
+    try:
+        # Try absolute imports (when installed as package)
+        from twd.logger import initialize_logging
+        from twd.screen import display_select # <--- This is the actual TUI function
+        import twd.crud as crud
+    except ImportError:
+        try:
+            # Try local imports (when running from same directory)
+            from logger import initialize_logging
+            from screen import display_select # <--- This is the actual TUI function
+            import crud
+        except ImportError:
+            # Create stub functions if modules aren't available
+            # THIS IS THE STUB THAT'S LIKELY BEING CALLED IF THE TUI DOESN'T SHOW
+            def initialize_logging(config):
+                """Stub function for when logger module is not available"""
+                pass
+
+            def display_select(config, dirs, save_config_func=None): # Added save_config_func for stub consistency
+                """Stub function for when screen module is not available"""
+                # Simple fallback - just return the first directory
+                log.warning("Screen module not imported, using fallback TUI.")
+                if dirs:
+                    return list(dirs.values())[0]
+                return None
+
+            # Create a simple crud stub
+            class CrudStub:
+                def ensure_data_file_exists(self, config):
+                    """Ensure data file exists"""
+                    data_file = config.get('data_file')
+                    if not os.path.exists(data_file):
+                        os.makedirs(os.path.dirname(data_file), exist_ok=True)
+                        with open(data_file, 'w') as f:
+                            json.dump({}, f)
+
+                def load_data(self, config_obj_or_path):
+                    """Load data from file"""
+                    data_file = self.get_data_file(config_obj_or_path)
+                    if os.path.exists(data_file):
+                        try:
+                            with open(data_file, 'r') as f:
+                                return json.load(f)
+                        except (json.JSONDecodeError, OSError):
+                            return {}
+                    return {}
+
+                def save_data(self, config_obj_or_path, data):
+                    """Save data to file"""
+                    data_file = self.get_data_file(config_obj_or_path)
+                    os.makedirs(os.path.dirname(data_file), exist_ok=True)
+                    with open(data_file, 'w') as f:
+                        json.dump(data, f, indent=2)
+
+                def create_entry(self, config, data, path, alias=None):
+                    """Create a new entry"""
+                    import time
+                    import uuid
+
+                    alias_id = alias or str(uuid.uuid4())[:8]
+                    data[alias_id] = {
+                        'path': path,
+                        'alias': alias or alias_id,
+                        'created_at': time.time()
+                    }
+
+                    self.save_data(config, data)
+                    return alias_id
+
+                def delete_data_file(self, config):
+                    """Delete the data file"""
+                    data_file = self.get_data_file(config)
+                    if os.path.exists(data_file):
+                        os.remove(data_file)
+                
+                def get_data_file(self, config_obj_or_path):
+                    if isinstance(config_obj_or_path, dict):
+                        return os.path.expanduser(config_obj_or_path.get("data_file", "~/.twd/data"))
+                    return os.path.expanduser(config_obj_or_path)
+
+
+            crud = CrudStub()
 
 log = logging.getLogger("log")
 error_log = logging.getLogger("error")
@@ -25,6 +115,8 @@ DEFAULT_CONFIG = {
     "log_level": "INFO",
     "log_max_bytes": 5 * 1024 * 1024,  # 5 MB log rotation
     "log_backup_count": 3,
+    "show_id_column": True,
+    "show_created_column": True,
 }
 
 
@@ -37,10 +129,26 @@ def load_config():
     else:
         with open(CONFIG_FILE, "r") as file:
             try:
-                return json.load(file)
+                loaded_config = json.load(file)
+                for key, default_value in DEFAULT_CONFIG.items():
+                    if key not in loaded_config:
+                        loaded_config[key] = default_value
+                return loaded_config
             except json.JSONDecodeError as e:
                 error_log.error(f"Error loading config: {e}")
                 return DEFAULT_CONFIG
+
+
+def save_config(config_data):
+    try:
+        with open(CONFIG_FILE, "w") as file:
+            sorted_config = OrderedDict(sorted(config_data.items()))
+            json.dump(sorted_config, file, indent=4)
+        log.info(f"Saved configuration to {CONFIG_FILE}")
+    except OSError as e:
+        error_log.error(f"Error writing config file: {e}")
+    except Exception as e:
+        error_log.error(f"Unexpected error saving config: {e}")
 
 
 CONFIG = load_config()
@@ -72,6 +180,12 @@ def ensure_log_error_files():
 ensure_log_error_files()
 
 
+def get_temp_file_path(suffix):
+    """Get a portable temporary file path."""
+    temp_dir = tempfile.gettempdir()
+    return os.path.join(temp_dir, f"twd_{suffix}")
+
+
 def get_absolute_path(path):
     try:
         return os.path.abspath(path)
@@ -97,19 +211,23 @@ def output_handler(
 
     if CONFIG["output_behaviour"] == 1 or simple_output:
         if path:
-            with open("/tmp/twd_path", "w") as f:
+            twd_path_file = get_temp_file_path("path")
+            with open(twd_path_file, "w") as f:
                 f.write(path)
             if CONFIG["clear_after_screen"]:
-                with open("/tmp/twd_clear", "w") as f:
+                twd_clear_file = get_temp_file_path("clear")
+                with open(twd_clear_file, "w") as f:
                     f.write(path)
             if output:
                 print(path)
     elif CONFIG["output_behaviour"] == 2:
         if path:
-            with open("/tmp/twd_path", "w") as f:
+            twd_path_file = get_temp_file_path("path")
+            with open(twd_path_file, "w") as f:
                 f.write(path)
             if CONFIG["clear_after_screen"]:
-                with open("/tmp/twd_clear", "w") as f:
+                twd_clear_file = get_temp_file_path("clear")
+                with open(twd_clear_file, "w") as f:
                     f.write(path)
         if output:
             print(message)
@@ -190,7 +308,9 @@ def show_main(alias=None, output=True, simple_output=False):
                 output_handler("No TWD with alias found", None, output, simple_output)
                 return 1
 
-        selected_dir = display_select(CONFIG, dirs)
+        # Pass save_config function to display_select.
+        # This function will be called by screen.py when column toggles occur.
+        selected_dir = display_select(CONFIG, dirs, save_config_func=save_config)
         if selected_dir is None:
             output_handler("No TWD selected", None, output, simple_output)
             return 0
@@ -213,9 +333,15 @@ def show_directory(output=True, simple_output=False):
         output_handler("No TWD set", None, output, simple_output)
         return
 
-    max_alias_len = max(len(entry["alias"]) for entry in dirs.values()) if dirs else 0
-    max_id_len = max(len(alias_id) for alias_id in dirs.keys()) if dirs else 0
-    max_path_len = max(len(entry["path"]) for entry in dirs.values()) if dirs else 0
+    if not dirs:
+        max_alias_len = 0
+        max_id_len = 0
+        max_path_len = 0
+    else:
+        max_alias_len = max(len(entry["alias"]) for entry in dirs.values()) if dirs else 0
+        max_id_len = max(len(alias_id) for alias_id in dirs.keys()) if dirs else 0
+        max_path_len = max(len(entry["path"]) for entry in dirs.values()) if dirs else 0
+
 
     header = f"{'Alias'.ljust(max_alias_len)}  {'ID'.ljust(max_id_len)}  {'Path'.ljust(max_path_len)}  Created At"
     print(header)
@@ -258,6 +384,7 @@ This feature is to prevent accidental execution.""",
 def setup(alias):
     bashrc_path = os.path.expanduser("~/.bashrc")
     alias = "twd" if not alias else alias
+    temp_dir = tempfile.gettempdir()
     with open(bashrc_path, "a") as file:
         file.write(f"\neval $(python3 -m twd --shell {alias})\n")
     print("Please execute the following command to activate TWD:")
@@ -271,7 +398,6 @@ def get_package_version():
     except PackageNotFoundError as e:
         error_log.error(f"Package version not found: {e}")
         return "Unknown version"
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -325,15 +451,20 @@ def main():
     simple_output = args.simple_output
 
     if args.shell:
+        # Get the actual temporary directory path from Python's tempfile module
+        actual_temp_dir = tempfile.gettempdir()
+        twd_path_file = os.path.join(actual_temp_dir, "twd_path")
+        twd_clear_file = os.path.join(actual_temp_dir, "twd_clear")
+
         print(rf"""function {args.shell}() {{
             python3 -m twd "$@";
-            if [ -f /tmp/twd_path ]; then
-                cd "$(cat /tmp/twd_path)";
-                /bin/rm -f /tmp/twd_path;
+            if [ -f {twd_path_file} ]; then
+                cd "$(cat {twd_path_file})";
+                /bin/rm -f {twd_path_file};
             fi;
-            if [ -f /tmp/twd_clear ]; then
+            if [ -f {twd_clear_file} ]; then
                 clear;
-                /bin/rm -f /tmp/twd_clear;
+                /bin/rm -f {twd_clear_file};
             fi;
         }}""")
         return 0
@@ -345,16 +476,26 @@ def main():
     directory = args.directory or args.dir
     alias = args.alias or args.ali
 
+    # Handle each case explicitly
     if args.save:
         save_directory(directory, alias, output, simple_output)
-    elif args.go:
-        show_main(alias, output, simple_output)
+        return 0
+    elif args.go is not None:
+        # Handle -g/--go flag
+        go_alias = args.go.strip() if args.go.strip() else None
+        return show_main(go_alias, output, simple_output)
     elif args.list:
         show_directory(output, simple_output)
+        return 0
     elif args.unset:
-        unset_directory(output, simple_output, force=args.force)
+        unset_directory(output, simple_output, args.force)
+        return 0
+    elif directory and not args.save:
+        # If directory is provided without -s flag, treat as alias for navigation
+        return show_main(directory, output, simple_output)
     else:
-        show_main(None, output, simple_output)
+        # No arguments provided, show the main TUI
+        return show_main(None, output, simple_output)
 
 
 if __name__ == "__main__":
