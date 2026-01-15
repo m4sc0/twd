@@ -20,7 +20,10 @@ def cli(ctx):
     if ctx.invoked_subcommand is None:
         # TODO: launch TUI here
 
-        TWDApp(manager=ctx.obj['manager']).run()
+        path = TWDApp(manager=ctx.obj['manager']).run()
+
+        # write to fd3
+        os.write(3, bytes(str(path), "utf-8"))
 
         pass
 

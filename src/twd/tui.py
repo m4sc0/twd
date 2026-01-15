@@ -67,6 +67,9 @@ class TWDApp(App):
 
     @on(DataTable.RowSelected)
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """
+        select row and send back to the original program (probably cli)
+        """
         table = event.data_table
         row_key = event.row_key
 
@@ -79,7 +82,8 @@ class TWDApp(App):
 
         self.notify(f"Selected: {entry.alias} -> {entry.path}")
 
-        # TODO: return path chosen
+        # return selected path to cli
+        self.exit(entry.path) 
 
 if __name__ == "__main__":
     app = TWDApp()
