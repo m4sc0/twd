@@ -12,7 +12,6 @@ rich==14.2.0
 textual==7.2.0
 tomli==2.4.0
 tomli_w==1.2.0
--e git+ssh://git@github.com/m4sc0/twd.git@6889f1fdb3e4bbe0c2faa8f82e14e2eaeafa7171#egg=twd
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uc-micro-py==1.0.3
