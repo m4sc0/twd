@@ -3,13 +3,17 @@ from textual.app import App, ComposeResult, Binding
 from textual.containers import HorizontalGroup, VerticalScroll
 from textual.reactive import reactive
 from textual.widgets import Button, Digits, Footer, Header, DataTable, Label
+from textual.color import Color
 
-from .data import TwdManager
+from twd.config import Config
+from twd.data import TwdManager
 
 class TWDApp(App):
     """
     TWD TUI Application
     """
+
+    CSS_PATH = "tui.tcss"
 
     BINDINGS = [
             Binding("j", "cursor_down", "Down"),
@@ -23,13 +27,18 @@ class TWDApp(App):
 
     def compose(self) -> ComposeResult:
 
-        yield Footer()
+        # yield Footer()
         yield DataTable(
                 cursor_type='row',
                 cell_padding=2,
+                # zebra_stripes=True,
+                id="data",
                 )
 
     def on_mount(self) -> None:
+        # set theme
+        self.theme = "flexoki"
+
         table = self.query_one(DataTable)
 
         # add headers
@@ -37,7 +46,7 @@ class TWDApp(App):
         
         # fill data
         for entry in self.manager.list_all():
-            table.add_row(entry.alias, entry.name, str(entry.path), entry.created_at)
+            table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at)
 
     # actions
     def action_cursor_down(self) -> None:
@@ -86,5 +95,11 @@ class TWDApp(App):
         self.exit(entry.path) 
 
 if __name__ == "__main__":
-    app = TWDApp()
-    app.run()
+    # made sure it works with 'serve'
+    config = Config.load()
+    manager = TwdManager(config.data_path)
+
+    app = TWDApp(manager=manager)
+    path = app.run()
+
+    print(path)

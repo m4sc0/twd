@@ -1,0 +1,33 @@
+Screen {
+  background: transparent;
+}
+
+#data {
+  width: 100%;
+  height: 1fr;
+  background: transparent;
+  border: none;
+  # margin: 4 8;
+  # padding: 1 2;
+  margin: 0;
+  padding: 0;
+}
+
+#data > .datatable--header {
+  background: $surface-lighten-1;
+  color: $text;
+  text-style: bold;
+}
+
+#data > .datatable--cursor {
+  background: $accent;
+  color: $text;
+}
+
+#data > .datatable--odd-row {
+  background: $surface-lighten-1;
+}
+
+#data > .datatable--even-row {
+  background: transparent;
+}
