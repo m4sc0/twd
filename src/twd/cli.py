@@ -5,7 +5,7 @@ from .config import Config
 from .data import TwdManager
 from .tui import TWDApp
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.pass_context
 def cli(ctx):
     """
@@ -15,6 +15,14 @@ def cli(ctx):
 
     ctx.obj['config'] = Config.load() # load config
     ctx.obj['manager'] = TwdManager(ctx.obj['config'].data_path)
+
+    # if no subcommand was provided, launch TUI
+    if ctx.invoked_subcommand is None:
+        # TODO: launch TUI here
+
+        TWDApp(manager=ctx.obj['manager']).run()
+
+        pass
 
 @cli.command()
 @click.argument('path')
@@ -71,9 +79,9 @@ def remove(ctx, alias):
     
     try:
         manager.remove(alias)
-        click.echo(f"✓ Removed '{alias}'")
+        click.echo(f"Removed '{alias}'")
     except KeyError as e:
-        click.echo(f"✗ {e}", err=True)
+        click.echo(f"{e}", err=True)
         raise click.Abort()
 
 @cli.command('list')
