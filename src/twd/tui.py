@@ -1,3 +1,4 @@
+from textual import on
 from textual.app import App, ComposeResult, Binding
 from textual.containers import HorizontalGroup, VerticalScroll
 from textual.reactive import reactive
@@ -38,6 +39,7 @@ class TWDApp(App):
         for entry in self.manager.list_all():
             table.add_row(entry.alias, entry.name, str(entry.path), entry.created_at)
 
+    # actions
     def action_cursor_down(self) -> None:
         """
         move cursor down
@@ -62,6 +64,22 @@ class TWDApp(App):
 
     def action_exit(self) -> None:
         self.exit()
+
+    @on(DataTable.RowSelected)
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        table = event.data_table
+        row_key = event.row_key
+
+        # get row
+        row_data = table.get_row(row_key)
+        alias = row_data[0]
+
+        # get entry
+        entry = self.manager.get(alias)
+
+        self.notify(f"Selected: {entry.alias} -> {entry.path}")
+
+        # TODO: return path chosen
 
 if __name__ == "__main__":
     app = TWDApp()
