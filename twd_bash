@@ -1,0 +1,9 @@
+#!/bin/bash
+
+t () {
+  binary="twd"
+  local target=$($binary "$@" 3>&1 >/dev/tty)
+  if [[ -n "$target" && -d "$target" ]]; then
+    cd "$target"
+  fi
+}
