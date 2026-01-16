@@ -18,3 +18,17 @@ Previously twd wrote to a temp file, then a bash function used the contents if t
 For some reason I thought writing a whole UI system using [curses](https://de.wikipedia.org/wiki/Curses) was a good idea. Well, now at least I know better and can say that I won't do that ever again.
 
 I'll use [Textual](https://textual.textualize.io/) now.
+
+### Setup
+
+It's possible to use TWD without the feature of cd'ing anywhere. But that's kinda lame lol. To make sure it works as intended, copy the following snippet into something like a `~/.bashrc` file.
+
+```bash
+t () {
+  binary="twd"
+  local target=$($binary "$@" 3>&1 >/dev/tty)
+  if [[ -n "$target" && -d "$target" ]]; then
+    cd "$target"
+  fi
+}
+```
