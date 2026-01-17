@@ -1,12 +1,14 @@
 import click
 import os
 from pathlib import Path
+from . import __version__
 from .config import Config
 from .data import TwdManager
 from .tui import TWDApp
 
 @click.group(invoke_without_command=True)
 @click.pass_context
+@click.version_option(version=__version__)
 def cli(ctx):
     """
     TWD - Temp / Tracked Working Directory
