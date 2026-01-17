@@ -2,6 +2,8 @@ Screen {
   background: transparent;
 }
 
+# DataTable
+
 #data {
   width: 100%;
   height: 1fr;
@@ -9,7 +11,7 @@ Screen {
   border: none;
   # margin: 4 8;
   # padding: 1 2;
-  margin: 1 0;
+  margin: 0;
   padding: 0;
 }
 
@@ -30,4 +32,10 @@ Screen {
 
 #data > .datatable--even-row {
   background: transparent;
+}
+
+# CWD
+
+Label.cwd {
+  margin: 1 2;
 }

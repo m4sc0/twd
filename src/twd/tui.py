@@ -2,7 +2,7 @@ from textual import on
 from textual.app import App, ComposeResult, Binding
 from textual.containers import HorizontalGroup, VerticalScroll
 from textual.reactive import reactive
-from textual.widgets import Button, Digits, Footer, Header, DataTable, Label
+from textual.widgets import Button, Digits, Footer, Header, DataTable, Label, Rule
 from textual.color import Color
 
 from twd.config import Config
@@ -28,6 +28,11 @@ class TWDApp(App):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield Footer()
+
+        # cwd
+        yield Label(f"cwd: {self.manager.cwd}", classes="cwd")
+
+        # twd selection table
         yield DataTable(
                 cursor_type='row',
                 cell_padding=2,

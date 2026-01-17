@@ -57,6 +57,7 @@ class TwdManager:
     def __init__(self, csv_path: Path):
         self.csv_path = csv_path
         self._ensure_csv_exists()
+        self.cwd = str(Path.cwd())
 
     def _ensure_csv_exists(self) -> None:
         """create csv headers"""
