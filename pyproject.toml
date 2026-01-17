@@ -1,0 +1,31 @@
+[project]
+name = "twd-m4sc0"
+version = "3.0.0"
+description = "TWD by m4sc0"
+authors = [{name = "m4sc0"}]
+requires-python = ">=3.13"
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "click>=8",
+  "textual>=7.2",
+  "pydantic>=2.12"
+]
+
+[project.urls]
+Homepage = "https://github.com/m4sc0/twd"
+
+[project.scripts]
+twd = "twd.cli:cli"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
