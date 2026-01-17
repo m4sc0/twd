@@ -26,8 +26,8 @@ class TWDApp(App):
         super().__init__(*args, **kwargs)
 
     def compose(self) -> ComposeResult:
-
-        # yield Footer()
+        yield Header(show_clock=True)
+        yield Footer()
         yield DataTable(
                 cursor_type='row',
                 cell_padding=2,
@@ -36,8 +36,10 @@ class TWDApp(App):
                 )
 
     def on_mount(self) -> None:
-        # set theme
+        # app config
         self.theme = "flexoki"
+        self.title = "TWD"
+        self.sub_title = "Tracked Working Directory"
 
         table = self.query_one(DataTable)
 
