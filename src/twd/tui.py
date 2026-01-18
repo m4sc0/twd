@@ -70,6 +70,10 @@ class TWDApp(App):
 
         search_input = self.query_one("#search-input", Input)
         search_input.display = False
+
+        # add headers
+        table = self.query_one(DataTable)
+        table.add_columns(*self.manager.CSV_HEADERS)
         
         self._populate_table()
 
@@ -78,10 +82,7 @@ class TWDApp(App):
         fill or refresh data table
         """
         table = self.query_one(DataTable)
-        table.clear(columns=True)
-
-        # add headers
-        table.add_columns(*self.manager.CSV_HEADERS)
+        table.clear()
 
         if entries is None:
             entries = self.manager.list_all()
