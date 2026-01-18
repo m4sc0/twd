@@ -1,9 +1,12 @@
+import csv
+
 from pathlib import Path
-from .config import Config
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 from datetime import datetime
-import csv
+
+from .config import Config
+from .utils import search
 
 class Entry(BaseModel):
     """Data class for a signle TWD Entry"""
