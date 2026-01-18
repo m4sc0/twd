@@ -39,3 +39,11 @@ Screen {
 Label.cwd {
   margin: 1 2;
 }
+
+# Search input
+
+Input#search-input {
+  margin: 0 0 1 0;
+  border: round $accent;
+  background: transparent;
+}
