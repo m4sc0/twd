@@ -37,3 +37,10 @@ def search(query, items, threshold = 50) -> List:
 
     return results
 
+def linear_search(query, items) -> List:
+    """
+    simple substring search
+    """
+    result = [entry.alias for entry in items if query in entry.alias]
+
+    return result
