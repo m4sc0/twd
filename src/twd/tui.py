@@ -50,7 +50,11 @@ class TWDApp(App):
         yield Footer()
 
         # cwd
-        yield Label(f"cwd: {self.manager.cwd}", classes="cwd")
+        yield HorizontalGroup(
+                Label(f"cwd: {self.manager.cwd}", classes="cwd"),
+                Label("", id="mode"),
+                id="header"
+                )
 
         yield Input(placeholder="Search...", id="search-input")
 
@@ -97,20 +101,25 @@ class TWDApp(App):
         """
         search_input = self.query_one("#search-input", Input)
         table = self.query_one(DataTable)
+        mode_label = self.query_one("#mode")
+
+        mode_label.update(str(new_mode.value).upper())
 
         if new_mode == Mode.SEARCH:
             # enter search mode
             search_input.display = True
             search_input.value = ""
             search_input.focus()
-            self.sub_title = "Tracked Working Directory — SEARCH"
+
+            mode_label.add_class("search")
         elif new_mode == Mode.NORMAL:
             # enter normal mode
             search_input.display = False
             search_input.value = ""
             self._populate_table()
             table.focus()
-            self.sub_title = "Tracked Working Directory"
+
+            mode_label.remove_class("search")
 
     # actions
     def action_cursor_down(self) -> None:

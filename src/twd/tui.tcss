@@ -35,13 +35,22 @@ Screen {
 }
 
 # CWD
-
 Label.cwd {
   margin: 1 2;
+  width: 10fr;
+}
+
+# Mode
+Label#mode {
+  padding: 1 2;
+  background: $surface-lighten-1;
+}
+
+Label#mode.search {
+  background: $accent;
 }
 
 # Search input
-
 Input#search-input {
   margin: 0 0 1 0;
   border: round $accent;
