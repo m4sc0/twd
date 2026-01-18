@@ -87,7 +87,7 @@ class TWDApp(App):
             entries = self.manager.list_all()
         
         # fill data
-        for entry in self.manager.list_all():
+        for entry in entries:
             table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at)
 
     def watch_mode(self, old_mode: Mode, new_mode: Mode) -> None:
