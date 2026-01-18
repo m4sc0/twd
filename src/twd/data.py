@@ -1,9 +1,12 @@
+import csv
+
 from pathlib import Path
-from .config import Config
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 from datetime import datetime
-import csv
+
+from .config import Config
+from .utils import search
 
 class Entry(BaseModel):
     """Data class for a signle TWD Entry"""
@@ -57,6 +60,7 @@ class TwdManager:
     def __init__(self, csv_path: Path):
         self.csv_path = csv_path
         self._ensure_csv_exists()
+        self.cwd = str(Path.cwd())
 
     def _ensure_csv_exists(self) -> None:
         """create csv headers"""

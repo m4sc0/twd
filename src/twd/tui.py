@@ -1,12 +1,18 @@
+from enum import Enum
 from textual import on
 from textual.app import App, ComposeResult, Binding
 from textual.containers import HorizontalGroup, VerticalScroll
 from textual.reactive import reactive
-from textual.widgets import Button, Digits, Footer, Header, DataTable, Label
+from textual.widgets import Button, Digits, Footer, Header, DataTable, Label, Rule, Input
 from textual.color import Color
 
 from twd.config import Config
 from twd.data import TwdManager
+from twd.utils import search, linear_search
+
+class Mode(Enum):
+    NORMAL = "normal"
+    SEARCH = "search"
 
 class TWDApp(App):
     """
@@ -16,18 +22,39 @@ class TWDApp(App):
     CSS_PATH = "tui.tcss"
 
     BINDINGS = [
+            # motion
             Binding("j", "cursor_down", "Down"),
             Binding("k", "cursor_up", "Up"),
-            Binding("q", "exit", "Exit", show=False),
+
+            # modify
+            Binding("/", "enter_search_mode", "Search"),
+            Binding("escape", "enter_normal_mode", "Normal", show=False),
+            # TODO: edit
+            # TODO: rename
+
+            # select
+            Binding("enter", "select", "Select"),
+
+            # exit
+            Binding("q", "exit", "Exit"),
         ]
+
+    mode: Mode = reactive(Mode.NORMAL)
 
     def __init__(self, manager: TwdManager, *args, **kwargs):
         self.manager = manager
         super().__init__(*args, **kwargs)
 
     def compose(self) -> ComposeResult:
+        yield Header(show_clock=True)
+        yield Footer()
 
-        # yield Footer()
+        # cwd
+        yield Label(f"cwd: {self.manager.cwd}", classes="cwd")
+
+        yield Input(placeholder="Search...", id="search-input")
+
+        # twd selection table
         yield DataTable(
                 cursor_type='row',
                 cell_padding=2,
@@ -36,17 +63,53 @@ class TWDApp(App):
                 )
 
     def on_mount(self) -> None:
-        # set theme
+        # app config
         self.theme = "flexoki"
+        self.title = "TWD"
+        self.sub_title = "Tracked Working Directory"
 
+        search_input = self.query_one("#search-input", Input)
+        search_input.display = False
+        
+        self._populate_table()
+
+    def _populate_table(self, entries=None) -> None:
+        """
+        fill or refresh data table
+        """
         table = self.query_one(DataTable)
+        table.clear(columns=True)
 
         # add headers
         table.add_columns(*self.manager.CSV_HEADERS)
+
+        if entries is None:
+            entries = self.manager.list_all()
         
         # fill data
         for entry in self.manager.list_all():
             table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at)
+
+    def watch_mode(self, old_mode: Mode, new_mode: Mode) -> None:
+        """
+        react to mode changes
+        """
+        search_input = self.query_one("#search-input", Input)
+        table = self.query_one(DataTable)
+
+        if new_mode == Mode.SEARCH:
+            # enter search mode
+            search_input.display = True
+            search_input.value = ""
+            search_input.focus()
+            self.sub_title = "Tracked Working Directory — SEARCH"
+        elif new_mode == Mode.NORMAL:
+            # enter normal mode
+            search_input.display = False
+            search_input.value = ""
+            self._populate_table()
+            table.focus()
+            self.sub_title = "Tracked Working Directory"
 
     # actions
     def action_cursor_down(self) -> None:
@@ -71,8 +134,57 @@ class TWDApp(App):
 
         table.move_cursor(row=prev_row)
 
+    def action_enter_search_mode(self) -> None:
+        """
+        enter search mode
+        """
+        if self.mode == Mode.SEARCH:
+            return
+        self.mode = Mode.SEARCH
+
+    def action_enter_normal_mode(self) -> None:
+        """
+        enter normal mode
+        """
+        if self.mode == Mode.NORMAL:
+            return
+        self.mode = Mode.NORMAL
+
     def action_exit(self) -> None:
         self.exit()
+
+    @on(Input.Changed, "#search-input")
+    def on_search_input_changed(self, e: Input.Changed) -> None:
+        """
+        filter table as user types
+        """
+        if self.mode != Mode.SEARCH:
+            return
+
+        query = e.value
+
+        all_entries = self.manager.list_all()
+
+        # TODO: filter entries and repopulate table
+
+        search_result = linear_search(query, all_entries)
+
+        filtered = [entry for entry in all_entries if entry.alias in search_result]
+
+        self._populate_table(filtered)
+
+    @on(Input.Submitted, "#search-input")
+    def on_search_submitted(self, e: Input.Submitted) -> None:
+        """
+        when user presses enter in search, return to normal mode
+        """
+        if self.mode != Mode.SEARCH:
+            return
+
+        self.mode = Mode.NORMAL
+
+        self.query_one(DataTable).focus()
+
 
     @on(DataTable.RowSelected)
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
