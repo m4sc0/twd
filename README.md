@@ -1,27 +1,28 @@
-# twd-m4sc0
+# twd
 
-> [!IMPORTANT]
-> This is complete rewrite of the program `twd`. If you're using `<=v2.0.3` please make sure to upgrade to the newest major release. The archived version v2 can be viewed [here](https://github.com/m4sc0/twd-archived).
+A command-line tool for managing and navigating between directories in the terminal.
 
-> twd-m4sc0 / twd is a command-line tool that allows you to temporarily save a working directory and easily navigate back to it. It's designed for developers and users who frequently need to switch between directories in the terminal.
+## What it does
 
-That's what it was supposed to do at the start. Now it's more like a hub for your frequently visited directories. You can use it like a bookmark manager or for the quickest method of changing between directories that you can find.
+`twd` lets you bookmark directories and quickly jump between them. Instead of typing out long paths or navigating through multiple `cd` commands, you save directories once and access them with vim-like motion bindings.
 
-There are quite a few things I wanna make better this time.
+Think of it as a directory hub for places you visit frequently.
 
-### Better directory changing
+## Why this exists
 
-Previously twd wrote to a temp file, then a bash function used the contents if that file exists, cd's to the dir and deletes the file again. This time around I'm going a different way. I found the method `os.write(3, path)` which can write to [file descriptors](https://en.wikipedia.org/wiki/File_descriptor) directly. This is the same way stdout and stderr are handled in the background (i think). But i'm using a fourth (0 = stdin, 1 = stdout, 2 = stderr), unused FD to write to. This is then captured in the bash function separately from the stdout. 
+I got tired of constantly navigating through the same directory trees. This tool saves time when you're working across multiple projects or deep directory structures.
 
-### Improved TUI
+No AI was used in the development of this tool. It's written by hand, contains bugs, and isn't particularly optimized. But it works for what I need, and I'm continuing to improve it.
 
-For some reason I thought writing a whole UI system using [curses](https://de.wikipedia.org/wiki/Curses) was a good idea. Well, now at least I know better and can say that I won't do that ever again.
+## Installation
 
-I'll use [Textual](https://textual.textualize.io/) now.
+```bash
+pip install twd-m4sc0
+```
 
-### Setup
+## Setup
 
-It's possible to use TWD without the feature of cd'ing anywhere. But that's kinda lame lol. To make sure it works as intended, copy the following snippet into something like a `~/.bashrc` file.
+To actually change directories (rather than just print paths), add this function to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
 t () {
@@ -32,3 +33,25 @@ t () {
   fi
 }
 ```
+
+The tool can work without this setup, but you'll only get path output instead of directory changes. This also allows for a quicker launch — instead of having to type `twd` over and over you can start it with just `t` (might conflict with other programs or functions).
+
+## How it works
+
+`twd` uses file descriptor 3 to communicate the target directory to the shell function. The bash function captures this output and executes the `cd` command. This avoids using temporary files.
+
+The interface is built with Textual, a Python TUI framework.
+
+## Version 3
+
+This is a complete rewrite from version 2. If you're using v2.0.3 or earlier, the archived version is available [here](https://github.com/m4sc0/twd-archived).
+
+Changes include better directory handling, a proper TUI instead of hand-rolled curses code, and generally cleaner implementation.
+
+## Status
+
+The project is functional but has known issues. I'm actively developing it and fixing bugs as I find them. Check the issues tab for current problems and planned improvements. Contributions are always appreciated!
+
+## License
+
+MIT
