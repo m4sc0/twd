@@ -1,6 +1,6 @@
 [project]
 name = "twd-m4sc0"
-version = "3.0.1"
+version = "3.0.3"
 description = "TWD by m4sc0"
 authors = [{name = "m4sc0"}]
 requires-python = ">=3.13"
