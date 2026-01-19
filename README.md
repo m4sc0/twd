@@ -36,6 +36,16 @@ t () {
 
 The tool can work without this setup, but you'll only get path output instead of directory changes. This also allows for a quicker launch — instead of having to type `twd` over and over you can start it with just `t` (might conflict with other programs or functions).
 
+## Dev environment
+
+Clone the repo and install locally with 
+
+```bash
+pip install -e .
+```
+
+It is recommend to create a virtual environment and install the dependencies beforehand.
+
 ## How it works
 
 `twd` uses file descriptor 3 to communicate the target directory to the shell function. The bash function captures this output and executes the `cd` command. This avoids using temporary files.
