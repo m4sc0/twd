@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import datetime
 from textual import on
 from textual.app import App, ComposeResult, Binding
 from textual.containers import HorizontalGroup, VerticalScroll
@@ -95,7 +96,7 @@ class TWDApp(App):
         
         # fill data
         for entry in entries:
-            table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at)
+            table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at.strftime("%Y-%m-%d %H:%M:%S"))
 
     def watch_mode(self, old_mode: Mode, new_mode: Mode) -> None:
         """
