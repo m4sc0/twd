@@ -79,7 +79,7 @@ class TWDApp(App):
 
         # add headers
         table = self.query_one(DataTable)
-        table.add_columns(*self.manager.CSV_HEADERS)
+        table.add_columns(*self.manager.CSV_HEADERS_FANCY)
         
         self._populate_table()
 

@@ -55,6 +55,7 @@ class TwdManager:
     """twd entry manager stored in csv"""
 
     CSV_HEADERS = ["alias", "path", "name", "created_at"]
+    CSV_HEADERS_FANCY = ["Alias", "Path", "Description", "Created at"]
 
     def __init__(self, csv_path: Path):
         self.csv_path = csv_path
