@@ -24,10 +24,13 @@ def cli(ctx):
 
         path = TWDApp(manager=ctx.obj['manager']).run()
 
+        if not path:
+            print("Exiting...")
+            exit(0)
+
         # write to fd3
         os.write(3, bytes(str(path), "utf-8"))
-
-        pass
+        exit(0)
 
 @cli.command()
 @click.argument('path')
