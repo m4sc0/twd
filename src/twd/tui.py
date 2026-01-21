@@ -130,8 +130,11 @@ class TWDApp(App):
         """
         table = self.query_one(DataTable)
 
-        current_row = table.cursor_coordinate.row
-        next_row = (current_row + 1) % table.row_count
+        try:
+            current_row = table.cursor_coordinate.row
+            next_row = (current_row + 1) % table.row_count
+        except ZeroDivisionError as e:
+            return
 
         table.move_cursor(row=next_row)
 
@@ -141,8 +144,11 @@ class TWDApp(App):
         """
         table = self.query_one(DataTable)
         
-        current_row = table.cursor_coordinate.row
-        prev_row = (current_row - 1) % table.row_count
+        try:
+            current_row = table.cursor_coordinate.row
+            prev_row = (current_row - 1) % table.row_count
+        except ZeroDivisionError as e:
+            return
 
         table.move_cursor(row=prev_row)
 
