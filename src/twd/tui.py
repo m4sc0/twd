@@ -9,6 +9,7 @@ from textual.color import Color
 from twd.config import Config
 from twd.data import TwdManager
 from twd.utils import fuzzy_search, linear_search
+from twd.modals import ConfirmModal
 
 class Mode(Enum):
     NORMAL = "normal"
@@ -28,6 +29,7 @@ class TWDApp(App):
 
             # modify
             Binding("/", "enter_search_mode", "Search"),
+            Binding("d", "delete_entry", "Delete"),
             Binding("escape", "enter_normal_mode", "Normal", show=False),
             # TODO: edit
             # TODO: rename
@@ -159,6 +161,38 @@ class TWDApp(App):
         if self.mode == Mode.NORMAL:
             return
         self.mode = Mode.NORMAL
+
+    def action_delete_entry(self) -> None:
+        """
+        open confirm modal and delete entry if yes
+        """
+        if not self.mode == Mode.NORMAL:
+            return
+
+        table = self.query_one(DataTable)
+
+        # get row
+        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+        row_data = table.get_row(row_key)
+        alias = row_data[0]
+
+        # get entry
+        entry = self.manager.get(alias)
+
+        def check_delete(decision: bool | None) -> None:
+            """
+            open modal and return the decision
+            """
+            if not decision:
+                return
+
+            self.manager.remove(alias)
+
+            self._populate_table()
+
+            self.notify(f"Removed entry \"{entry.name}\"")
+
+        self.push_screen(ConfirmModal(entry), check_delete)
 
     def action_exit(self) -> None:
         self.exit()
