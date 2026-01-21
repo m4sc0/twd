@@ -10,7 +10,7 @@ from textual.color import Color
 from twd.config import Config
 from twd.data import TwdManager
 from twd.utils import fuzzy_search, linear_search
-from twd.modals import ConfirmModal
+from twd.modals import ConfirmModal, EntryDeleteModal
 
 class Mode(Enum):
     NORMAL = "normal"
@@ -199,7 +199,8 @@ class TWDApp(App):
 
             self.notify(f"Removed entry \"{entry.name}\"")
 
-        self.push_screen(ConfirmModal(message=f"Are you sure want to delete '{entry.alias}'?"), check_delete)
+        # self.push_screen(ConfirmModal(message=f"Are you sure want to delete '{entry.alias}'?"), check_delete)
+        self.push_screen(EntryDeleteModal(entry), check_delete)
 
     def action_exit(self) -> None:
         self.exit()

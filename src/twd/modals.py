@@ -49,17 +49,24 @@ class ConfirmModal(ModalScreen[bool]):
         confirm_text: Text to show for confirmation
         cancel_text: Text to show for cancellation
         """
-        if not message:
-            raise ValueError("Message was not supplied")
         self.message = message
         self.confirm_text = confirm_text
         self.cancel_text = cancel_text
 
         super().__init__()
 
+    def compose_content(self) -> ComposeResult:
+        """
+        Abstract method for presenting custom shenanigans
+        """
+        if self.message:
+            yield Label(self.message, id="content")
+        else:
+            yield Label("Are you sure?", id="content")
+
     def compose(self) -> ComposeResult:
         with Container():
-            yield Label(self.message)
+            yield from self.compose_content()
             with Horizontal():
                 yield Button(self.cancel_text, id="no", variant="error")
                 yield Button(self.confirm_text, id="yes", variant="success")
@@ -73,3 +80,13 @@ class ConfirmModal(ModalScreen[bool]):
     def yes_decision(self) -> None:
         """decision yes"""
         self.dismiss(True)
+
+class EntryDeleteModal(ConfirmModal):
+    """Confirmation modal with detailed entry information"""
+
+    def __init__(self, entry):
+        self.entry = entry
+        super().__init__(confirm_text="Delete", cancel_text="Cancel")
+
+    def compose_content(self) -> ComposeResult:
+        yield Label(f"Delete entry '{self.entry.name}'?", id="content")
