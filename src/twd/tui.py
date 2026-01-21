@@ -8,7 +8,7 @@ from textual.color import Color
 
 from twd.config import Config
 from twd.data import TwdManager
-from twd.utils import search, linear_search
+from twd.utils import fuzzy_search, linear_search
 
 class Mode(Enum):
     NORMAL = "normal"
@@ -177,9 +177,13 @@ class TWDApp(App):
 
         # TODO: filter entries and repopulate table
 
-        search_result = linear_search(query, all_entries)
+        if query is None:
+            self._populate_table()
+            return
 
-        filtered = [entry for entry in all_entries if entry.alias in search_result]
+        search_result = fuzzy_search(query, all_entries)
+
+        filtered = [item[0] for item in search_result]
 
         self._populate_table(filtered)
 

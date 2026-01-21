@@ -6,7 +6,6 @@ from typing import List, Optional
 from datetime import datetime
 
 from .config import Config
-from .utils import search
 
 class Entry(BaseModel):
     """Data class for a signle TWD Entry"""
