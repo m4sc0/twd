@@ -3,6 +3,7 @@ from textual.app import ComposeResult
 from textual.screen import ModalScreen
 from textual.containers import Container, Horizontal
 from textual.widgets import Button, Label
+from typing import Union
 
 from twd.data import Entry
 
@@ -37,16 +38,31 @@ class ConfirmModal(ModalScreen[bool]):
         }
     """
 
-    def __init__(self, entry: Entry):
-        self.entry = entry
+    def __init__(
+            self, 
+            message: Union[str, None] = None,
+            confirm_text: str = "Yes",
+            cancel_text: str = "No"
+    ):
+        """
+        message: The message to display when popping the modal
+        confirm_text: Text to show for confirmation
+        cancel_text: Text to show for cancellation
+        """
+        if not message:
+            raise ValueError("Message was not supplied")
+        self.message = message
+        self.confirm_text = confirm_text
+        self.cancel_text = cancel_text
+
         super().__init__()
 
     def compose(self) -> ComposeResult:
         with Container():
-            yield Label(f"entry data: {self.entry.name}")
+            yield Label(self.message)
             with Horizontal():
-                yield Button("No", id="no", variant="error")
-                yield Button("Yes", id="yes", variant="success")
+                yield Button(self.cancel_text, id="no", variant="error")
+                yield Button(self.confirm_text, id="yes", variant="success")
 
     @on(Button.Pressed, "#no")
     def no_decision(self) -> None:

@@ -199,7 +199,7 @@ class TWDApp(App):
 
             self.notify(f"Removed entry \"{entry.name}\"")
 
-        self.push_screen(ConfirmModal(entry), check_delete)
+        self.push_screen(ConfirmModal(message=f"Are you sure want to delete '{entry.alias}'?"), check_delete)
 
     def action_exit(self) -> None:
         self.exit()
