@@ -105,14 +105,13 @@ def list_twds(ctx):
     
     invalid_found = False
     for entry in entries:
-        if os.path.exists(entry.path) and not invalid_found:
+        if not invalid_found and not os.path.exists(entry.path):
             invalid_found = True
         click.echo(f"{entry.alias:20} {entry.name:30} {entry.path}")
 
-    if not invalid_found:
-        return
+    if invalid_found:
+        click.echo(f"\nInvalid TWD paths found. Run <twd clean> to remove them.")
 
-    click.echo(f"\nInvalid TWD paths found. Run <twd clean> to remove them.")
 
 @cli.command('clean')
 @click.option('--yes', '-y', is_flag=True, help="Remove all invalid entries without asking")
