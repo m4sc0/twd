@@ -31,6 +31,7 @@ class TWDApp(App):
             # modify
             Binding("/", "slash_key", "Search"),
             Binding("d", "d_key", "Delete"),
+            Binding("e", "e_key", "Edit"),
             Binding("escape", "escape_key", "Normal", show=False),
             # TODO: edit
             # TODO: rename
@@ -98,6 +99,19 @@ class TWDApp(App):
         # fill data
         for entry in entries:
             table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at.strftime("%Y-%m-%d %H:%M:%S"))
+
+    def _current_row_entry(self) -> Entry:
+        table = self.query_one(DataTable)
+
+        # get row
+        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+        row_data = table.get_row(row_key)
+        alias = row_data[0]
+
+        # get entry
+        entry = self.manager.get(alias)
+
+        return entry
 
     def watch_mode(self, old_mode: Mode, new_mode: Mode) -> None:
         """
@@ -180,15 +194,7 @@ class TWDApp(App):
         if not self.mode == Mode.NORMAL:
             return
 
-        table = self.query_one(DataTable)
-
-        # get row
-        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
-        row_data = table.get_row(row_key)
-        alias = row_data[0]
-
-        # get entry
-        entry = self.manager.get(alias)
+        entry = self._current_row_entry()
 
         def check_delete(decision: bool | None) -> None:
             """
@@ -255,12 +261,7 @@ class TWDApp(App):
         table = event.data_table
         row_key = event.row_key
 
-        # get row
-        row_data = table.get_row(row_key)
-        alias = row_data[0]
-
-        # get entry
-        entry = self.manager.get(alias)
+        entry = self._current_row_entry()
 
         self.notify(f"Selected: {entry.alias} -> {entry.path}")
 
