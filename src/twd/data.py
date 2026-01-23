@@ -26,10 +26,6 @@ class Entry(BaseModel):
     def validate_path(cls, v):
         path = Path(v).expanduser().resolve()
 
-        if not path.exists():
-            raise ValueError(f"Path does not exist: {path}")
-        if not path.is_dir():
-            raise ValueError(f"Path is not a directory: {path}")
         return path
 
     def to_csv(self) -> List[str]:
@@ -81,10 +77,7 @@ class TwdManager:
             next(reader) # skip headers
 
             for row in reader:
-                try:
-                    entries.append(Entry.from_csv(row))
-                except Exception as e:
-                    print(f"Warning: skipping invalid row: {e}")
+                entries.append(Entry.from_csv(row))
 
         return entries
 
@@ -134,7 +127,7 @@ class TwdManager:
 
         self._write_all(entries)
 
-    def list_all(self) -> List[Entry]:
+    def list_all(self) -> tuple[List[Entry], List[dict]]:
         entries = self._read_all()
 
         return sorted(entries, key=lambda e: e.created_at)
