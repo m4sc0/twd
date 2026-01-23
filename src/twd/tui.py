@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import datetime
 from textual import on
 from textual.app import App, ComposeResult, Binding
 from textual.containers import HorizontalGroup, VerticalScroll
@@ -9,7 +10,7 @@ from textual.color import Color
 from twd.config import Config
 from twd.data import TwdManager
 from twd.utils import fuzzy_search, linear_search
-from twd.modals import ConfirmModal
+from twd.modals import ConfirmModal, EntryDeleteModal
 
 class Mode(Enum):
     NORMAL = "normal"
@@ -79,7 +80,7 @@ class TWDApp(App):
 
         # add headers
         table = self.query_one(DataTable)
-        table.add_columns(*self.manager.CSV_HEADERS)
+        table.add_columns(*self.manager.CSV_HEADERS_FANCY)
         
         self._populate_table()
 
@@ -95,7 +96,7 @@ class TWDApp(App):
         
         # fill data
         for entry in entries:
-            table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at)
+            table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at.strftime("%Y-%m-%d %H:%M:%S"))
 
     def watch_mode(self, old_mode: Mode, new_mode: Mode) -> None:
         """
@@ -198,7 +199,8 @@ class TWDApp(App):
 
             self.notify(f"Removed entry \"{entry.name}\"")
 
-        self.push_screen(ConfirmModal(entry), check_delete)
+        # self.push_screen(ConfirmModal(message=f"Are you sure want to delete '{entry.alias}'?"), check_delete)
+        self.push_screen(EntryDeleteModal(entry), check_delete)
 
     def action_exit(self) -> None:
         self.exit()
