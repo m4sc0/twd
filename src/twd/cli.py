@@ -134,6 +134,10 @@ def clean(ctx, yes):
 
         invalids.append(entry)
 
+    if len(invalids) == 0:
+        click.echo("No invalid TWDs found.")
+        return
+
     click.echo(f"Found {len(invalids)} invalid TWDs\n")
 
     # only valid
