@@ -8,7 +8,7 @@ from .tui import TWDApp
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-@click.version_option(version=__version__)
+@click.version_option(version=__version__, prog_name="twd")
 def cli(ctx):
     """
     TWD - Temp / Tracked Working Directory
