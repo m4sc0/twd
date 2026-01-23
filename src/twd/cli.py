@@ -113,3 +113,49 @@ def list_twds(ctx):
         return
 
     click.echo(f"\nInvalid TWD paths found. Run <twd clean> to remove them.")
+
+@cli.command('clean')
+@click.option('--yes', '-y', is_flag=True, help="Remove all invalid entries without asking")
+@click.pass_context
+def clean(ctx, yes):
+    """
+    clean twds from invalid paths
+    """
+    manager = ctx.obj['manager']
+
+    # all entries, valid and invalid
+    entries = manager.list_all()
+
+    # only invalids
+    invalids = []
+    for entry in entries:
+        if os.path.exists(entry.path):
+            continue
+
+        invalids.append(entry)
+
+    click.echo(f"Found {len(invalids)} invalid TWDs\n")
+
+    # only valid
+    valid_entries = []
+    for entry in entries:
+        if entry not in invalids:
+            valid_entries.append(entry)
+
+    # remove all
+    if yes:
+        click.echo("Removing all invalid entries...")
+        manager._write_all(valid_entries)
+        click.echo(f"Done. {len(valid_entries)} TWDs left.")
+        return
+
+    to_keep = []
+    for inv in invalids:
+        if not click.confirm(f"Do you want to remove '{inv.alias}'?", default=True):
+            # user wants to keep invalid TWD (weird but i'll allow it)
+            to_keep.append(inv)
+
+    # write a unison list of valid entries and the ones to keep
+    final_entries = valid_entries + to_keep
+    manager._write_all(final_entries)
+    click.echo(f"Done. {len(final_entries)} TWDs left.")
