@@ -29,8 +29,8 @@ class TWDApp(App):
             Binding("k", "cursor_up", "Up"),
 
             # modify
-            Binding("/", "enter_search_mode", "Search"),
-            Binding("d", "delete_entry", "Delete"),
+            Binding("/", "slash_key", "Search"),
+            Binding("d", "d_key", "Delete"),
             Binding("escape", "escape_key", "Normal", show=False),
             # TODO: edit
             # TODO: rename
@@ -154,7 +154,7 @@ class TWDApp(App):
 
         table.move_cursor(row=prev_row)
 
-    def action_enter_search_mode(self) -> None:
+    def action_slash_key(self) -> None:
         """
         enter search mode
         """
@@ -173,7 +173,7 @@ class TWDApp(App):
             return
         self.mode = Mode.NORMAL
 
-    def action_delete_entry(self) -> None:
+    def action_d_key(self) -> None:
         """
         open confirm modal and delete entry if yes
         """
