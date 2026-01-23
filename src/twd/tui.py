@@ -31,7 +31,7 @@ class TWDApp(App):
             # modify
             Binding("/", "enter_search_mode", "Search"),
             Binding("d", "delete_entry", "Delete"),
-            Binding("escape", "enter_normal_mode", "Normal", show=False),
+            Binding("escape", "escape_key", "Normal", show=False),
             # TODO: edit
             # TODO: rename
 
@@ -43,6 +43,7 @@ class TWDApp(App):
         ]
 
     mode: Mode = reactive(Mode.NORMAL)
+    search_results = None
 
     def __init__(self, manager: TwdManager, *args, **kwargs):
         self.manager = manager
@@ -161,11 +162,14 @@ class TWDApp(App):
             return
         self.mode = Mode.SEARCH
 
-    def action_enter_normal_mode(self) -> None:
+    def action_escape_key(self) -> None:
         """
         enter normal mode
         """
         if self.mode == Mode.NORMAL:
+            if self.search_results is not None:
+                self._populate_table()
+                self.search_results = None
             return
         self.mode = Mode.NORMAL
 
@@ -199,7 +203,6 @@ class TWDApp(App):
 
             self.notify(f"Removed entry \"{entry.name}\"")
 
-        # self.push_screen(ConfirmModal(message=f"Are you sure want to delete '{entry.alias}'?"), check_delete)
         self.push_screen(EntryDeleteModal(entry), check_delete)
 
     def action_exit(self) -> None:
@@ -228,6 +231,7 @@ class TWDApp(App):
         filtered = [item[0] for item in search_result]
 
         self._populate_table(filtered)
+        self.search_results = filtered
 
     @on(Input.Submitted, "#search-input")
     def on_search_submitted(self, e: Input.Submitted) -> None:
@@ -238,6 +242,7 @@ class TWDApp(App):
             return
 
         self.mode = Mode.NORMAL
+        self._populate_table(self.search_results)
 
         self.query_one(DataTable).focus()
 
