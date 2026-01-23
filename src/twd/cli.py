@@ -103,5 +103,13 @@ def list_twds(ctx):
         click.echo("No TWDs saved yet. Use 'twd save <path> <alias>' to add one.")
         return
     
+    invalid_found = False
     for entry in entries:
+        if os.path.exists(entry.path) and not invalid_found:
+            invalid_found = True
         click.echo(f"{entry.alias:20} {entry.name:30} {entry.path}")
+
+    if not invalid_found:
+        return
+
+    click.echo(f"\nInvalid TWD paths found. Run <twd clean> to remove them.")
