@@ -127,7 +127,7 @@ class TwdManager:
 
         self._write_all(entries)
 
-    def list_all(self) -> tuple[List[Entry], List[dict]]:
+    def list_all(self) -> List[Entry]:
         entries = self._read_all()
 
         return sorted(entries, key=lambda e: e.created_at)
