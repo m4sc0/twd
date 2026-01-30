@@ -15,6 +15,17 @@ class Entry(BaseModel):
     name: str = Field(..., min_length=3)
     created_at: datetime = Field(default_factory=datetime.now)
 
+    def __eq__(self, other) -> bool:
+        """Compare entries based on their values"""
+        if not isinstance(other, Entry):
+            return NotImplemented
+
+        return (
+                self.alias == other.alias
+                and self.path == other.path
+                and self.name == other.name
+                )
+
     @validator("alias")
     def validate_alias(cls, v):
         if not v.replace("_", "").replace("-", "").isalnum():
@@ -114,6 +125,16 @@ class TwdManager:
                 return entry
 
         return None
+
+    def update(self, alias: str, entry: Entry) -> bool:
+        """update TWD by alias"""
+        if not self.exists(alias):
+            return False
+
+        # simplest form of update is remove and add
+        self.remove(alias)
+
+        self.add(entry.alias, entry.path, entry.name)
 
     def remove(self, alias: str) -> None:
         """remove entry by alias"""
