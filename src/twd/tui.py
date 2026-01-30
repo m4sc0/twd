@@ -8,9 +8,9 @@ from textual.widgets import Button, Digits, Footer, Header, DataTable, Label, Ru
 from textual.color import Color
 
 from twd.config import Config
-from twd.data import TwdManager
+from twd.data import TwdManager, Entry
 from twd.utils import fuzzy_search, linear_search
-from twd.modals import ConfirmModal, EntryDeleteModal
+from twd.modals import ConfirmModal, EntryDeleteModal, EditEntryModal
 
 class Mode(Enum):
     NORMAL = "normal"
@@ -210,6 +210,29 @@ class TWDApp(App):
             self.notify(f"Removed entry \"{entry.name}\"")
 
         self.push_screen(EntryDeleteModal(entry), check_delete)
+
+    def action_e_key(self) -> None:
+        """
+        open edit modal and edit entry in place
+        """
+        entry = self._current_row_entry()
+
+        def save_new_entry(new_entry: Entry | None) -> None:
+            if not new_entry:
+                # user hit 'Discard'
+                return
+
+            if entry == new_entry:
+                # no changes so no update
+                return
+
+            self.notify(f"Updated TWD '{new_entry.alias}'")
+
+            self.manager.update(new_entry.alias, new_entry)
+            self.manager._write_all(self.manager._read_all())
+            self._populate_table()
+
+        self.push_screen(EditEntryModal(entry), save_new_entry)
 
     def action_exit(self) -> None:
         self.exit()
