@@ -23,7 +23,7 @@ class EditEntryModal(ConfirmModal[Entry | None]):
         """
         entry: the entry to edit
         """
-        self.entry = entry
+        self.entry = Entry.from_values(entry.alias, entry.path, entry.name, entry.created_at)
 
         super().__init__(
                 confirm_text="Save",

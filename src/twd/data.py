@@ -58,6 +58,16 @@ class Entry(BaseModel):
                 created_at=datetime.fromisoformat(row[3])
                 )
 
+    @classmethod
+    def from_values(cls, alias, path, name, created_at) -> "Entry":
+        """create from values"""
+        return cls(
+                alias=alias,
+                path=path,
+                name=name,
+                created_at=created_at
+                )
+
 class TwdManager:
     """twd entry manager stored in csv"""
 

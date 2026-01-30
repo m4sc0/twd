@@ -218,12 +218,10 @@ class TWDApp(App):
         entry = self._current_row_entry()
 
         def save_new_entry(new_entry: Entry | None) -> None:
-            if not new_entry:
+            if not new_entry or entry == new_entry:
                 # user hit 'Discard'
-                return
-
-            if entry == new_entry:
                 # no changes so no update
+                self.notify(f"No changes")
                 return
 
             self.notify(f"Updated TWD '{new_entry.alias}'")
