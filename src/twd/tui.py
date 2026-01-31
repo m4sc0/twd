@@ -8,9 +8,9 @@ from textual.widgets import Button, Digits, Footer, Header, DataTable, Label, Ru
 from textual.color import Color
 
 from twd.config import Config
-from twd.data import TwdManager
+from twd.data import TwdManager, Entry
 from twd.utils import fuzzy_search, linear_search
-from twd.modals import ConfirmModal, EntryDeleteModal
+from twd.modals import ConfirmModal, EntryDeleteModal, EditEntryModal
 
 class Mode(Enum):
     NORMAL = "normal"
@@ -29,9 +29,10 @@ class TWDApp(App):
             Binding("k", "cursor_up", "Up"),
 
             # modify
-            Binding("/", "enter_search_mode", "Search"),
-            Binding("d", "delete_entry", "Delete"),
-            Binding("escape", "enter_normal_mode", "Normal", show=False),
+            Binding("/", "slash_key", "Search"),
+            Binding("d", "d_key", "Delete"),
+            Binding("e", "e_key", "Edit"),
+            Binding("escape", "escape_key", "Normal", show=False),
             # TODO: edit
             # TODO: rename
 
@@ -43,6 +44,7 @@ class TWDApp(App):
         ]
 
     mode: Mode = reactive(Mode.NORMAL)
+    search_results = None
 
     def __init__(self, manager: TwdManager, *args, **kwargs):
         self.manager = manager
@@ -97,6 +99,19 @@ class TWDApp(App):
         # fill data
         for entry in entries:
             table.add_row(entry.alias, str(entry.path), entry.name, entry.created_at.strftime("%Y-%m-%d %H:%M:%S"))
+
+    def _current_row_entry(self) -> Entry:
+        table = self.query_one(DataTable)
+
+        # get row
+        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+        row_data = table.get_row(row_key)
+        alias = row_data[0]
+
+        # get entry
+        entry = self.manager.get(alias)
+
+        return entry
 
     def watch_mode(self, old_mode: Mode, new_mode: Mode) -> None:
         """
@@ -153,7 +168,7 @@ class TWDApp(App):
 
         table.move_cursor(row=prev_row)
 
-    def action_enter_search_mode(self) -> None:
+    def action_slash_key(self) -> None:
         """
         enter search mode
         """
@@ -161,30 +176,25 @@ class TWDApp(App):
             return
         self.mode = Mode.SEARCH
 
-    def action_enter_normal_mode(self) -> None:
+    def action_escape_key(self) -> None:
         """
         enter normal mode
         """
         if self.mode == Mode.NORMAL:
+            if self.search_results is not None:
+                self._populate_table()
+                self.search_results = None
             return
         self.mode = Mode.NORMAL
 
-    def action_delete_entry(self) -> None:
+    def action_d_key(self) -> None:
         """
         open confirm modal and delete entry if yes
         """
         if not self.mode == Mode.NORMAL:
             return
 
-        table = self.query_one(DataTable)
-
-        # get row
-        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
-        row_data = table.get_row(row_key)
-        alias = row_data[0]
-
-        # get entry
-        entry = self.manager.get(alias)
+        entry = self._current_row_entry()
 
         def check_delete(decision: bool | None) -> None:
             """
@@ -199,8 +209,28 @@ class TWDApp(App):
 
             self.notify(f"Removed entry \"{entry.name}\"")
 
-        # self.push_screen(ConfirmModal(message=f"Are you sure want to delete '{entry.alias}'?"), check_delete)
         self.push_screen(EntryDeleteModal(entry), check_delete)
+
+    def action_e_key(self) -> None:
+        """
+        open edit modal and edit entry in place
+        """
+        entry = self._current_row_entry()
+
+        def save_new_entry(new_entry: Entry | None) -> None:
+            if not new_entry or entry == new_entry:
+                # user hit 'Discard'
+                # no changes so no update
+                self.notify(f"No changes")
+                return
+
+            self.notify(f"Updated TWD '{new_entry.alias}'")
+
+            self.manager.update(new_entry.alias, new_entry)
+            self.manager._write_all(self.manager._read_all())
+            self._populate_table()
+
+        self.push_screen(EditEntryModal(entry), save_new_entry)
 
     def action_exit(self) -> None:
         self.exit()
@@ -228,6 +258,7 @@ class TWDApp(App):
         filtered = [item[0] for item in search_result]
 
         self._populate_table(filtered)
+        self.search_results = filtered
 
     @on(Input.Submitted, "#search-input")
     def on_search_submitted(self, e: Input.Submitted) -> None:
@@ -238,6 +269,7 @@ class TWDApp(App):
             return
 
         self.mode = Mode.NORMAL
+        self._populate_table(self.search_results)
 
         self.query_one(DataTable).focus()
 
@@ -250,12 +282,7 @@ class TWDApp(App):
         table = event.data_table
         row_key = event.row_key
 
-        # get row
-        row_data = table.get_row(row_key)
-        alias = row_data[0]
-
-        # get entry
-        entry = self.manager.get(alias)
+        entry = self._current_row_entry()
 
         self.notify(f"Selected: {entry.alias} -> {entry.path}")
 

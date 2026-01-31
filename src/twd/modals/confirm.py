@@ -3,11 +3,13 @@ from textual.app import ComposeResult
 from textual.screen import ModalScreen
 from textual.containers import Container, Horizontal
 from textual.widgets import Button, Label
-from typing import Union
+from typing import Union, TypeVar, Generic
 
 from twd.data import Entry
 
-class ConfirmModal(ModalScreen[bool]):
+T = TypeVar('T')
+
+class ConfirmModal(ModalScreen[T], Generic[T]):
     """A confirm modal"""
 
     DEFAULT_CSS = """
@@ -42,7 +44,9 @@ class ConfirmModal(ModalScreen[bool]):
             self, 
             message: Union[str, None] = None,
             confirm_text: str = "Yes",
-            cancel_text: str = "No"
+            cancel_text: str = "No",
+            confirm_value: T | None = None,
+            cancel_value: T | None = None,
     ):
         """
         message: The message to display when popping the modal
@@ -52,6 +56,9 @@ class ConfirmModal(ModalScreen[bool]):
         self.message = message
         self.confirm_text = confirm_text
         self.cancel_text = cancel_text
+
+        self.confirm_value = confirm_value
+        self.cancel_value = cancel_value
 
         super().__init__()
 
@@ -68,18 +75,16 @@ class ConfirmModal(ModalScreen[bool]):
         with Container():
             yield from self.compose_content()
             with Horizontal():
-                yield Button(self.cancel_text, id="no", variant="error")
-                yield Button(self.confirm_text, id="yes", variant="success")
+                yield Button(self.cancel_text, id="cancel", variant="error")
+                yield Button(self.confirm_text, id="confirm", variant="success")
 
-    @on(Button.Pressed, "#no")
-    def no_decision(self) -> None:
-        """decision no"""
-        self.dismiss(False)
+    @on(Button.Pressed, "#cancel")
+    def cancel_pressed(self) -> None:
+        self.dismiss(self.cancel_value)
 
-    @on(Button.Pressed, "#yes")
-    def yes_decision(self) -> None:
-        """decision yes"""
-        self.dismiss(True)
+    @on(Button.Pressed, "#confirm")
+    def confirm_pressed(self) -> None:
+        self.dismiss(self.confirm_value)
 
 class EntryDeleteModal(ConfirmModal):
     """Confirmation modal with detailed entry information"""

@@ -8,7 +8,7 @@ from .tui import TWDApp
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-@click.version_option(version=__version__)
+@click.version_option(version=__version__, prog_name="twd")
 def cli(ctx):
     """
     TWD - Temp / Tracked Working Directory
@@ -39,7 +39,18 @@ def cli(ctx):
 @click.pass_context
 def save(ctx, path, alias, name):
     """
-    Save a new twd with PATH, [opt] ALIAS and [opt] NAME
+    Save a new TWD with an Alias (UUID like) and Name
+
+    Examples:
+
+        twd save ./Movies movies Media
+
+        twd save / root "Root Directory -- /dev/sda3"
+
+        twd save . finances-q1 "Finance Documents Q1"
+
+    The naming conventions for the alias align with kebab-casing.
+    There are no naming conventions for the name.
     """
     manager: TwdManager = ctx.obj['manager']
 
@@ -61,7 +72,13 @@ def save(ctx, path, alias, name):
 @click.pass_context
 def get(ctx, alias):
     """
-    get path for ALIAS
+    cd into a directory by the given Alias
+
+    Examples:
+
+        twd get movies
+
+    There's really not much to it.
     """
     manager = ctx.obj['manager']
 
@@ -81,7 +98,13 @@ def get(ctx, alias):
 @click.pass_context
 def remove(ctx, alias):
     """
-    remove TWD by ALIAS
+    Remove TWD by the given Alias
+
+    Examples:
+
+        twd remove movies
+
+    That's it.
     """
     manager = ctx.obj['manager']
     
@@ -95,7 +118,9 @@ def remove(ctx, alias):
 @cli.command('list')
 @click.pass_context
 def list_twds(ctx):
-    """List all TWDs"""
+    """
+    List all TWDs
+    """
     manager = ctx.obj['manager']
     
     entries = manager.list_all()
@@ -118,7 +143,10 @@ def list_twds(ctx):
 @click.pass_context
 def clean(ctx, yes):
     """
-    clean twds from invalid paths
+    Clean the records of rogue TWDs
+
+    Sometimes it's possible that TWDs are not properly cleaned up.
+    That's what this subcommand does.
     """
     manager = ctx.obj['manager']
 
