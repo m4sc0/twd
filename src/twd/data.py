@@ -141,10 +141,16 @@ class TwdManager:
         if not self.exists(alias):
             return False
 
-        # simplest form of update is remove and add
-        self.remove(alias)
+        entries = self._read_all()
 
-        self.add(entry.alias, entry.path, entry.name)
+        # find and upate
+        for i, e in enumerate(entries):
+            if e.alias == alias.lower():
+                entries[i] = entry
+                break
+
+        self._write_all(entries)
+        return True
 
     def remove(self, alias: str) -> None:
         """remove entry by alias"""
