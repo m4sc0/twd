@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 from datetime import datetime
 
-from .config import Config
+from .config import Config, SortDirection
 
 class Entry(BaseModel):
     """Data class for a signle TWD Entry"""
@@ -167,7 +167,9 @@ class TwdManager:
     def list_all(self) -> List[Entry]:
         entries = self._read_all()
 
-        return sorted(entries, key=lambda e: e.created_at)
+        sort_config = self.config.settings.sort_order
+        reverse = (sort_config.direction == SortDirection.DESC)
+        return sorted(entries, key=lambda e: getattr(e, sort_config.field.value), reverse=reverse)
 
     def exists(self, alias: str) -> bool:
         return self.get(alias) is not None
