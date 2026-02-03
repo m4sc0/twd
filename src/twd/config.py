@@ -1,7 +1,7 @@
 
-
 from pathlib import Path
 from pydantic import BaseModel, Field, validator
+from enum import Enum
 import json
 import os
 import sys
@@ -32,10 +32,28 @@ def get_data_path() -> Path:
 
     return data_dir / "data.csv"
 
+class SortField(str, Enum):
+    ALIAS = "alias"
+    PATH = "path"
+    NAME = "name"
+    CREATED_AT = "created_at"
+
+class SortDirection(str, Enum):
+    ASC = "asc"
+    DESC = "desc"
+
+class SortOrderSetting(BaseModel):
+    field: SortField = SortField.CREATED_AT
+    direction: SortDirection = SortDirection.ASC
+
+class Settings(BaseModel):
+    sort_order: SortOrderSetting = Field(default_factory=SortOrderSetting)
+
 class Config(BaseModel):
     """App configuration"""
 
     data_path: Path = Field(default_factory=get_data_path)
+    settings: Settings = Field(default_factory=Settings)
     
     @validator("data_path")
     def validate_path(cls, v):

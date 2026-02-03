@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 from datetime import datetime
 
-from .config import Config
+from .config import Config, SortDirection
 
 class Entry(BaseModel):
     """Data class for a signle TWD Entry"""
@@ -74,17 +74,17 @@ class TwdManager:
     CSV_HEADERS = ["alias", "path", "name", "created_at"]
     CSV_HEADERS_FANCY = ["Alias", "Path", "Description", "Created at"]
 
-    def __init__(self, csv_path: Path):
-        self.csv_path = csv_path
+    def __init__(self, config: Config): # accept config as argument
+        self.config = config
         self._ensure_csv_exists()
         self.cwd = str(Path.cwd())
 
     def _ensure_csv_exists(self) -> None:
         """create csv headers"""
-        if not self.csv_path.exists():
-            self.csv_path.parent.mkdir(parents=True, exist_ok=True) 
+        if not self.config.data_path.exists():
+            self.config.data_path.parent.mkdir(parents=True, exist_ok=True) 
 
-            with open(self.csv_path, 'w', newline='') as f:
+            with open(self.config.data_path, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(self.CSV_HEADERS)
 
@@ -92,7 +92,7 @@ class TwdManager:
         """read all entries"""
         entries = []
 
-        with open(self.csv_path, 'r', newline='') as f:
+        with open(self.config.data_path, 'r', newline='') as f:
             reader = csv.reader(f)
 
             next(reader) # skip headers
@@ -103,7 +103,7 @@ class TwdManager:
         return entries
 
     def _write_all(self, entries: List[Entry]) -> None:
-        with open(self.csv_path, 'w', newline='') as f:
+        with open(self.config.data_path, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(self.CSV_HEADERS)
 
@@ -141,10 +141,16 @@ class TwdManager:
         if not self.exists(alias):
             return False
 
-        # simplest form of update is remove and add
-        self.remove(alias)
+        entries = self._read_all()
 
-        self.add(entry.alias, entry.path, entry.name)
+        # find and upate
+        for i, e in enumerate(entries):
+            if e.alias == alias.lower():
+                entries[i] = entry
+                break
+
+        self._write_all(entries)
+        return True
 
     def remove(self, alias: str) -> None:
         """remove entry by alias"""
@@ -161,7 +167,9 @@ class TwdManager:
     def list_all(self) -> List[Entry]:
         entries = self._read_all()
 
-        return sorted(entries, key=lambda e: e.created_at)
+        sort_config = self.config.settings.sort_order
+        reverse = (sort_config.direction == SortDirection.DESC)
+        return sorted(entries, key=lambda e: getattr(e, sort_config.field.value), reverse=reverse)
 
     def exists(self, alias: str) -> bool:
         return self.get(alias) is not None

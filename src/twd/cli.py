@@ -16,7 +16,7 @@ def cli(ctx):
     ctx.ensure_object(dict)
 
     ctx.obj['config'] = Config.load() # load config
-    ctx.obj['manager'] = TwdManager(ctx.obj['config'].data_path)
+    ctx.obj['manager'] = TwdManager(ctx.obj['config']) # pass config
 
     # if no subcommand was provided, launch TUI
     if ctx.invoked_subcommand is None:
